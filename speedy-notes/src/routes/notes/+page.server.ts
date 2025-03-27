@@ -38,8 +38,8 @@ export const actions: Actions = {
     }
 
     try {
-      await db.insert(notebooks).values({ name });
-      return { success: true };
+      const [newNotebook] = await db.insert(notebooks).values({ name }).returning();
+      return { success: true, notebookId: newNotebook.id };
     } catch (error) {
       console.error('Error creating notebook:', error);
       return fail(500, { error: 'Failed to create notebook' });

@@ -7,20 +7,43 @@
 
   let selectedNotebook: string | null = data.selectedNotebookId;
   let notebookToDelete: string | null = null;
+  let notes = data.notes;
+  let isLoading = false;
 
   // Reset form after successful submission
   $: if (form?.success) {
     notebookToDelete = null;
     // Only navigate in the browser
     if (browser) {
-      goto('?notebookId=' + selectedNotebook, { replaceState: true });
+      if (form.notebookId) {
+        // If we just created a notebook, select it
+        selectedNotebook = form.notebookId;
+        goto('?notebookId=' + form.notebookId, { replaceState: true });
+      } else if (selectedNotebook) {
+        // Otherwise, just refresh the current view
+        goto('?notebookId=' + selectedNotebook, { replaceState: true });
+      }
     }
   }
 
-  function selectNotebook(notebookId: string) {
+  async function selectNotebook(notebookId: string) {
+    if (selectedNotebook === notebookId) return;
+    
     selectedNotebook = notebookId;
+    isLoading = true;
+    
+    try {
+      const response = await fetch(`/api/notes?notebookId=${notebookId}`);
+      if (!response.ok) throw new Error('Failed to load notes');
+      notes = await response.json();
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    } finally {
+      isLoading = false;
+    }
+
     if (browser) {
-      goto('?notebookId=' + notebookId, { replaceState: true });
+      goto('?notebookId=' + notebookId, { replaceState: true, keepFocus: true });
     }
   }
 </script>
@@ -81,13 +104,25 @@
           </a>
         </div>
         <div class="space-y-4">
-          {#each data.notes as note}
-            <div class="p-4 border rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
-              <h3 class="font-semibold">{note.title}</h3>
+          {#if isLoading}
+            <div class="flex justify-center items-center h-32">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
-          {/each}
-          {#if data.notes.length === 0}
-            <p class="text-gray-500 italic">No notes yet. Click "New Note" to create one!</p>
+          {:else}
+            {#each notes as note}
+              <a
+                href="/notes/{note.id}"
+                class="block p-4 border rounded-lg hover:border-blue-300 transition-colors"
+              >
+                <h3 class="font-semibold">{note.title}</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  {new Date(note.createdAt).toLocaleDateString()}
+                </p>
+              </a>
+            {/each}
+            {#if notes.length === 0}
+              <p class="text-gray-500 italic">No notes yet. Click "New Note" to create one!</p>
+            {/if}
           {/if}
         </div>
       {:else}
