@@ -2,7 +2,7 @@ import { db } from '$lib/server/db';
 import { notebooks, notes } from '$lib/db/schema';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import type { InferModel } from 'drizzle-orm';
 
 type Note = InferModel<typeof notes>;
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ url }) => {
     
     let notesList: Note[] = [];
     if (selectedNotebookId) {
-      notesList = await db.select().from(notes).where(eq(notes.notebookId, selectedNotebookId));
+      notesList = await db.select().from(notes).where(eq(notes.notebookId, selectedNotebookId)).orderBy(desc(notes.createdAt));
     }
 
     return { 
