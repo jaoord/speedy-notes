@@ -1,4 +1,4 @@
-import { db } from '$lib/db';
+import { db } from '$lib/server/db';
 import { notebooks, notes } from '$lib/db/schema';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
@@ -51,23 +51,22 @@ export const actions: Actions = {
       } satisfies ActionError);
     }
 
+    // Verify notebook exists
+    const notebook = await db.select().from(notebooks).where(eq(notebooks.id, notebookId));
+
+    if (!notebook[0]) {
+      return fail(404, {
+        error: 'Notebook not found'
+      } satisfies ActionError);
+    }
+
+    // Try to insert the note
     try {
-      // Verify notebook exists
-      const notebook = await db.select().from(notebooks).where(eq(notebooks.id, notebookId));
-
-      if (!notebook[0]) {
-        return fail(404, {
-          error: 'Notebook not found'
-        } satisfies ActionError);
-      }
-
       await db.insert(notes).values({
         title,
         content,
         notebookId
       });
-
-      return { success: true } satisfies ActionSuccess;
     } catch (error) {
       console.error('Error creating note:', error);
       return fail(500, {
@@ -75,5 +74,8 @@ export const actions: Actions = {
         values: { title, content }
       } satisfies ActionError);
     }
+
+    // If we get here, the note was created successfully
+    return redirect(303, `/notes?notebookId=${notebookId}`);
   }
 }; 

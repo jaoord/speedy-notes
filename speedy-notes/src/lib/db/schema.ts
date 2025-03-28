@@ -1,19 +1,28 @@
 import { pgTable, text, timestamp, uuid, varchar, primaryKey } from 'drizzle-orm/pg-core';
 
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
 export const notebooks = pgTable('notebooks', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
+  userId: uuid('user_id').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const notes = pgTable('notes', {
   id: uuid('id').defaultRandom().primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
   content: text('content').notNull(),
-  notebookId: uuid('notebook_id').references(() => notebooks.id, { onDelete: 'cascade' }).notNull(),
+  notebookId: uuid('notebook_id').references(() => notebooks.id).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const tags = pgTable('tags', {
