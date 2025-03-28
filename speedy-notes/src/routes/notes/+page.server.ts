@@ -3,9 +3,8 @@ import { notebooks, notes } from '$lib/db/schema';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { eq, desc } from 'drizzle-orm';
-import type { InferModel } from 'drizzle-orm';
 
-type Note = InferModel<typeof notes>;
+type Note = typeof notes.$inferSelect;
 
 export const load: PageServerLoad = async ({ url }) => {
   try {
