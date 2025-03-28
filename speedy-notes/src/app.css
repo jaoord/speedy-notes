@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+@layer theme {
+    :root {
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+}
+
 @layer base {
     button {
         cursor: pointer;

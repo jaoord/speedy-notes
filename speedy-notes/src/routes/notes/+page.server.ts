@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { notebooks, notes } from '$lib/db/schema';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { eq, desc } from 'drizzle-orm';
 
@@ -61,7 +61,7 @@ export const actions: Actions = {
         content,
         notebookId
       });
-      return { success: true };
+      return redirect(303, `/notes?notebookId=${notebookId}`);
     } catch (error) {
       console.error('Error creating note:', error);
       return fail(500, { error: 'Failed to create note' });

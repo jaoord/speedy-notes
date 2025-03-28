@@ -9,6 +9,13 @@
   let notebookToDelete: string | null = null;
   let notes = data.notes;
   let isLoading = false;
+  let errorMessage = '';
+
+  // Update notes when data changes
+  $: {
+    notes = data.notes;
+    selectedNotebook = data.selectedNotebookId;
+  }
 
   // Reset form after successful submission
   $: if (form?.success) {
@@ -30,18 +37,6 @@
     if (selectedNotebook === notebookId) return;
     
     selectedNotebook = notebookId;
-    isLoading = true;
-    
-    try {
-      const response = await fetch(`/api/notes?notebookId=${notebookId}`);
-      if (!response.ok) throw new Error('Failed to load notes');
-      notes = await response.json();
-    } catch (error) {
-      console.error('Error loading notes:', error);
-    } finally {
-      isLoading = false;
-    }
-
     if (browser) {
       goto('?notebookId=' + notebookId, { replaceState: true, keepFocus: true });
     }
